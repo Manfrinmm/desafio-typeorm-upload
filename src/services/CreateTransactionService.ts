@@ -22,6 +22,12 @@ class CreateTransactionService {
     const transactionsRepository = getCustomRepository(TransactionsRepository);
     const createCategory = new CreateCategoryService();
 
+    if (!["income", "outcome"].includes(type)) {
+      throw new AppError(
+        `Transaction with type ${type} is invalid. It should be 'income' or 'outcome'`,
+      );
+    }
+
     const { total } = await transactionsRepository.getBalance();
 
     if (total < value && type === "outcome") {
@@ -35,13 +41,15 @@ class CreateTransactionService {
       );
     }
 
-    const { id } = await createCategory.execute({ title: category });
+    const transactionCategory = await createCategory.execute({
+      title: category,
+    });
 
     const transaction = transactionsRepository.create({
       title,
       value,
       type,
-      category_id: id,
+      category: transactionCategory,
     });
 
     await transactionsRepository.save(transaction);

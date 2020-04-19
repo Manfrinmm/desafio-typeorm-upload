@@ -47,7 +47,7 @@ transactionsRouter.delete("/:id", async (req, res) => {
 
   await deleteTransaction.execute(id);
 
-  return res.status(200).send();
+  return res.status(204).send();
 });
 
 transactionsRouter.post("/import", upload.single("file"), async (req, res) => {

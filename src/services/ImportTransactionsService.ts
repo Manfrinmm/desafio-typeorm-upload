@@ -1,7 +1,6 @@
 import csv from "csv-parse/lib";
 import fs from "fs";
 import { resolve, join } from "path";
-import { promisify } from "util";
 
 import Transaction from "../models/Transaction";
 import CreateTransactionService from "./CreateTransactionService";
@@ -29,6 +28,7 @@ class ImportTransactionsService {
         delimiter: ",",
         columns: ["title", "type", "value", "category"],
         from_line: 2,
+        trim: true,
       }),
     );
 
@@ -36,19 +36,16 @@ class ImportTransactionsService {
       datas.push(raw);
     });
 
-    parse.on("end", async () => {
-      console.log("Terminou de ler o arquivo");
-      // console.log(datas);
-      await this.deleteFile(csvPath);
-    });
-
     await new Promise(resolve => parse.on("end", resolve));
 
+    await this.deleteFile(csvPath);
+
     const transactions = await Promise.all(
-      datas.map(transaction => createTransaction.execute(transaction)),
+      await datas.map(async transaction =>
+        createTransaction.execute(transaction),
+      ),
     );
 
-    // console.log(datas);
     return transactions;
   }
 }
